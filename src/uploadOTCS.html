@@ -1,0 +1,349 @@
+<html>
+<head>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">  
+<style>
+	
+
+.navbar {
+    height:50px;
+    background: #ace none repeat;
+    color: #339;
+    margin-bottom:3px;
+}
+
+.navbar .column {
+  float: left;
+  width: 33%;
+  height:45px;
+  padding-top:10px;
+}
+
+.navbar .title{
+	float:left
+//	padding-top:10px;
+	font-size:30px;
+	width:40%;
+}
+
+.navbar #userInfo {
+  float: left;
+//  padding-top:30px;
+  font-size:20px;
+  width:20%;
+}
+
+/* Clear floats after the columns */
+.navbar:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+
+#listZone {
+  float: left;
+  width: 30%;
+  height: 80%;
+  background-color: #99ccff;
+  display:none;
+}
+#fileZone {
+  float: left;
+  width: 70%;
+  height: 80%;
+  display:none;
+  position:relative;
+}
+#uploadZone {
+	margin: auto;
+	width: 30%;
+	height:80%;
+	background-color: #AAEE66;
+	padding: 30px;
+	display:none;
+}
+
+#loginZone {
+	float:right;
+	width: 30%;
+	padding: 30px;
+	display:none;
+	border: 1px solid #333333;
+}
+
+ul{
+list-style-type: none; /* Remove bullets */
+  padding: 10; /* Remove padding */
+  margin: 20; /* Remove margins */
+}
+li {
+  padding-left: 1.3em;
+  margin:3px;
+  font-size:1.2em;
+}
+li:before {
+  content: "\f016"; /* FontAwesome Unicode */
+  font-family: FontAwesome;
+  display: inline-block;
+  margin-left: -1.3em; /* same as padding-left set on li */
+  width: 1.3em; /* same as padding-left set on li */
+}
+
+img{
+	margin:50px;
+}
+
+</style>
+
+<script>
+
+function init(){
+	setTicket();
+}
+
+function setTicket(){
+	var connectUrl= uploadUrl+"auth/connect";
+	
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	     	otcsTicket = this.responseText;
+             	console.log("otcsTicket:"+otcsTicket);
+        	}else{
+              	document.getElementById("listMessages").innerText = this.responseText;
+        	}
+        }
+    };
+    xhttp.open("GET", connectUrl, true);
+    xhttp.send();
+}
+
+
+
+function getFileList() {
+
+	var listUrl= uploadUrl+"listFolder/"+parentNode;
+	
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	     	flist = this.responseText;
+             	document.getElementById("listMessages").innerHTML = fileLinks(flist);
+        	}else{
+              	document.getElementById("listMessages").innerText = this.responseText;
+        	}
+        }
+    };
+    
+    
+    document.getElementById("listMessages").innerHTML = '<img src="./loading.gif" width="60"/>'; 
+    
+    
+    xhttp.open("GET", listUrl, true);
+    xhttp.setRequestHeader("otcsticket", otcsTicket);
+    xhttp.setRequestHeader("Authorization", authSession);
+    xhttp.send();
+			
+}
+
+function fileLinks(flist){
+	var html = '<ul>';
+	var jsonData = JSON.parse(flist);
+	for (var i = 0; i < jsonData.length; i++) {
+		file = jsonData[i];
+		html += '<li><a onclick="retrieveFile(\''+file.id+'\')">'+file.name+'</a></li>';
+	}
+	
+	html+="</ul>";
+console.log(html);
+	return html;
+
+}
+
+function retrieveFile(fileId) {
+
+	document.getElementById("showFile").innerHTML = "";
+	
+                    
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+        if (this.readyState == 4){
+             if(this.status == 200) {
+                   var contentType = xhttp.getResponseHeader("Content-Type");
+                   var blob = xhttp.response;
+
+					var embedFile = document.createElement("embed");
+					embedFile.setAttribute("src",window.URL.createObjectURL(blob));
+                    embedFile.setAttribute("type",contentType);
+                                
+                    if(contentType.includes("pdf")){
+                          embedFile.setAttribute("width","65%");  
+                          embedFile.setAttribute("height","100%");                             
+                    }
+                    
+                    document.getElementById("showFile").appendChild(embedFile);
+                                
+                    
+                                
+              }else{
+                  document.getElementById("errMsg").innerText = "error: fail to retrieve";
+        	  }
+        }
+    };
+                    
+    var retrieveUrl = uploadUrl+'retrieveFile?binId='+fileId;
+    xhttp.open("GET", retrieveUrl, true);
+    xhttp.responseType = "blob";
+    xhttp.setRequestHeader("otcsticket", otcsTicket);
+    xhttp.setRequestHeader("Authorization", authSession);
+    xhttp.send();
+}
+
+function uploadFile() {
+     var url = uploadUrl+"uploadFile/demo";
+            
+     var fd = new FormData();
+     fd.append( "parent", parentNode );
+     fd.append( "file", document.getElementById( 'fileToUpload' ).files[ 0 ] );
+                
+     var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+     	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	    	document.getElementById("uploadMsg").innerText = "Upload done. "+this.responseText;
+        	}else{
+            	document.getElementById("uploadMsg").innerText = "error: "+this.responseText;
+        	}
+     	}
+     };
+     
+     document.getElementById("uploadMsg").innerHTML = '<img src="./loading.gif" />';
+     
+     xhttp.open("POST", url, true);
+     xhttp.setRequestHeader( "otcsticket", otcsTicket );
+     xhttp.setRequestHeader("Authorization", authSession);
+     xhttp.overrideMimeType( "multipart/form-data" );
+    			
+     xhttp.send(fd);
+}
+
+function login(){
+	console.log('ACTION --> login');
+	
+	var authAPIUrl = "https://was-intra-sit.toronto.ca/c3api_auth/v2/AuthService.svc/AuthSet";
+
+	var formData = new Object();
+   	formData.user = document.getElementById("user").value;
+   	formData.pwd  = document.getElementById("pwd").value;
+   	formData.app = "demo";
+	
+	var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+     	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	    	var userInfo = JSON.parse(this.responseText);
+    	    	authSession = userInfo.sid;
+    	    	var name = userInfo.userID;
+    	    	document.getElementById("userInfo").innerText = name;
+    	    	document.getElementById("loginZone").style.display = "none";
+        	}else{
+            	document.getElementById("userInfo").innerText = "error: "+this.responseText;
+        	}
+     	}
+     };
+     xhttp.open("POST", authAPIUrl, true);
+     xhttp.setRequestHeader( "Content-Type", "application/json" );
+    			
+     xhttp.send(JSON.stringify(formData));
+}	 	 
+
+function showList(){
+	document.getElementById("uploadZone").style.display="none";
+	document.getElementById("listZone").style.display="block";
+	document.getElementById("displayZone").style.display="block";
+	document.getElementById("loginZone").style.display="none";
+	
+	getFileList();
+}
+
+function showUpload(){
+	document.getElementById("uploadZone").style.display="block";
+	document.getElementById("listZone").style.display="none";
+	document.getElementById("displayZone").style.display="none";
+	document.getElementById("loginZone").style.display="none";
+}
+
+function showLogin(){
+	if(authSession==="session"){		
+		document.getElementById("loginZone").style.display="block";
+		document.getElementById("uploadZone").style.display="none";
+		document.getElementById("listZone").style.display="none";
+		document.getElementById("displayZone").style.display="none";
+	}else{
+		authSession = "session";
+		document.getElementById("userInfo").innerText = "Guest";
+		document.getElementById("loginZone").style.display="none";
+	}
+}
+
+var otcsTicket='ticket';
+var parentNode = "demo";
+var authSession="session";
+var uploadUrl = 'https://config.cc.toronto.ca/eis_upload_otcs/';
+
+</script>
+
+</head>
+<body onload="init()">
+
+<div class="navbar">
+	<div class="column">
+		<button onclick="showList()">Check Files</button>
+		<button onclick="showUpload()">Upload File</button>
+	</div>	
+	
+	
+	<div class="column"> <span class="title">Upload OpenText Demo</span> </div>
+	<div class="column"> <a href="#" onclick="showLogin()" id="userInfo">Guest </a> </div>
+</div>
+
+
+<div id='listZone'>	
+	
+	<div id="listMessages"></div>
+
+</div>	
+
+<div id='displayZone'>
+	<span id="errMsg"></span>
+	<div id="showFile" ></div>
+</div>
+
+<div id='uploadZone' class="column3">
+	
+	<br /> <br />
+	<label for="fileToUpload">Select a File to Upload</label>
+    <br />
+    <input type="file" name="fileToUpload" id="fileToUpload" />
+    <hr />
+    <input type="button" onclick="uploadFile()" value="Upload" />
+    
+    <div id="uploadMsg"></div>
+	
+</div>
+
+<div id="loginZone">
+	<form>
+		<label>User Name: </label> <input type="text" id="user"> <br/> <br/>
+		<label>Password: </label> <input type="password" id="pwd"> <br/><br/>
+		<input id="btn" type="button" onclick="login()" value="login">
+	</form> 
+</div>
+	
+
+</body>
+</html>

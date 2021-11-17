@@ -1,0 +1,216 @@
+<html>
+<head>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">  
+<style>
+	
+
+.navbar {
+    height:50px;
+    background: #ace none repeat;
+    color: #339;
+    margin-bottom:3px;
+}
+
+.navbar .column {
+  float: left;
+  width: 33%;
+  height:45px;
+  padding-top:10px;
+}
+
+.navbar .title{
+	float:left
+//	padding-top:10px;
+	font-size:30px;
+	width:40%;
+}
+
+.navbar #userInfo {
+  float: left;
+//  padding-top:30px;
+  font-size:20px;
+  width:20%;
+}
+
+/* Clear floats after the columns */
+.navbar:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+
+#listZone {
+  float: left;
+  width: 30%;
+  height: 80%;
+  background-color: #99ccff;
+  margin:10px;
+  padding:20px;
+}
+#displayZone {
+  float: left;
+  width: 60%;
+  height: 80%;
+  background-color: #99fcc;
+  margin:10px;
+  padding:10px;
+
+}
+
+#loginZone {
+	padding: 30px;
+	margin:50px;
+	display:none;
+	border: 1px solid #333333;
+}
+
+ul{
+list-style-type: none; /* Remove bullets */
+  padding: 10; /* Remove padding */
+  margin: 20; /* Remove margins */
+}
+li {
+  padding-left: 1.3em;
+  margin:3px;
+  font-size:1.2em;
+}
+li:before {
+  content: "\f016"; /* FontAwesome Unicode */
+  font-family: FontAwesome;
+  display: inline-block;
+  margin-left: -1.3em; /* same as padding-left set on li */
+  width: 1.3em; /* same as padding-left set on li */
+}
+
+img{
+	margin:50px;
+}
+
+</style>
+
+<script>
+
+function browseUser() {
+
+	var user = document.getElementById("userName").value;
+	
+                    
+    var xhttp = new XMLHttpRequest();
+
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+          	 if(this.status == 200) {
+  console.log(this.responseText);        		 
+       	    	var userInfo = JSON.parse(this.responseText);
+       	    	
+       	    	document.getElementById("userProfile").value = JSON.stringify(userInfo, undefined, 2);;
+           	 }else{
+               	document.getElementById("userProfile").value = "error: "+this.responseText;
+           	 }
+    	}  	 
+ 
+    };
+                    
+    var retrieveUrl = userUrl+user+"?authSource=AD";
+    xhttp.open("GET", retrieveUrl, true);
+    
+    if(authSession!="session"){	
+    	xhttp.setRequestHeader("Authorization", authSession);
+    }	
+    xhttp.send();
+}
+
+
+
+function login(){
+	console.log('ACTION --> login');
+	
+	
+	var formData = new Object();
+   	formData.user = document.getElementById("user").value;
+   	formData.pwd  = document.getElementById("pwd").value;
+   	formData.app = "demo";
+	
+	var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+     	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	    	var userInfo = JSON.parse(this.responseText);
+    	    	authSession = userInfo.sid;
+    	    	var name = userInfo.userID;
+    	    	document.getElementById("userInfo").innerText = name;
+    	    	document.getElementById("loginZone").style.display = "none";
+        	}else{
+            	document.getElementById("userInfo").innerText = "error: "+this.responseText;
+        	}
+     	}
+     };
+     xhttp.open("POST", authAPIUrl, true);
+     xhttp.setRequestHeader( "Content-Type", "application/json" );
+    			
+     xhttp.send(JSON.stringify(formData));
+}	 	
+
+function showLogin(){
+	if(authSession==="session"){		
+		document.getElementById("loginZone").style.display="block";
+	}else{
+		authSession = "session";
+		document.getElementById("userInfo").innerText = "Guest";
+		document.getElementById("loginZone").style.display="none";
+	}
+}
+
+
+var authSession="session";
+var authAPIUrl = "https://config.cc.toronto.ca:49090/c3api_auth/v2/AuthService.svc/AuthSet";
+var userUrl = 'https://config.cc.toronto.ca:49090/c3api_auth/user/';
+
+</script>
+
+</head>
+<body>
+
+<div class="navbar">
+	
+	<div class="column"> <span class="title">AD User Lookup Demo</span> </div>
+	<div class="column"> <a href="#" onclick="showLogin()" id="userInfo">Guest </a> </div>
+</div>
+
+<div style="width:100%;height:600px;overflow:auto;">
+	<div id='listZone'>	
+	
+		<div id="loginZone">
+			<form>
+				<label>User Name: </label> <br> <input type="text" id="user"> <br/> <br/>
+				<label>Password: </label> <br> <input type="password" id="pwd"> <br/><br/>
+				<input id="btn" type="button" onclick="login()" value="login">
+			</form> 
+		</div>
+		
+		<div>
+		
+			Lookup User: <input type="text" id="userName">
+		
+				<br><br>
+		
+			<input type="button" onclick="browseUser()" value="submit">
+		</div>
+	</div>	
+	
+	<div id='displayZone'>
+		<span id="errMsg"></span>
+		<div id="showUser"> 
+			<textarea class="textarea" id="userProfile" rows=30 cols=80></textarea>
+		</div>
+	</div>
+</div>
+
+
+
+	
+
+</body>
+</html>

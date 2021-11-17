@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SuccessFactor User</title>
+    <link rel="stylesheet" href="css/bulma-docs.min.css">
+
+<script>
+
+function updateUserProfile(){
+	
+	var uid = getSelectUser();
+	
+	var reqBody = new Object();
+	
+	var attrs = document.getElementById("properites").getElementsByTagName("input");
+	for(i=0;i<attrs.length;i++){
+		if(attrs[i].getAttribute("type")=="text" && attrs[i].value){
+//			alert(attrs[i].getAttribute("name")+"  "+attrs[i].value);
+			reqBody[attrs[i].getAttribute("name")] = attrs[i].value;
+		}		
+	}
+	
+	var body = JSON.stringify(reqBody);
+// 	alert(body);
+	
+	var xhttp = new XMLHttpRequest();   
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+        	
+        		var obj = JSON.parse(this.responseText);
+
+        		document.getElementById("updateMsg").value = 
+        			JSON.stringify(obj, undefined, 2);
+        		
+        		document.getElementById('updateResp').classList.remove('is-hidden');
+        	
+        }
+    };
+    
+    xhttp.open("POST", sfUrl+uid, true);
+    xhttp.setRequestHeader('Content-Type', 'application/json');
+    xhttp.send(body);
+	
+}
+
+function getUserProfile(){
+	
+//	var uid = getSelectUser();
+	var uid = document.getElementById("uid").value;
+	console.log(uid);
+
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+        	if(this.status == 200) {
+        		document.getElementById("loading").style.display = 'none';
+        		
+    	     	userP = JSON.parse(this.responseText);
+             	console.log("userP:"+userP);
+             	
+             	for(i=0;i<userP.properties.length;i++){
+             		if(document.getElementById(userP.properties[i].key)){
+             			document.getElementById(userP.properties[i].key).innerText = userP.properties[i].value;       	
+             		}
+             	}	
+
+             	var dObj = JSON.parse(userP.full);
+             	document.getElementById("fullResponse").value = JSON.stringify(dObj, undefined, 2);
+        	}else{
+        		document.getElementById("loading").innerHTML = '';
+        		console.log("error:"+this.responseText);
+              	document.getElementById("responseMsg1").innerText = this.responseText;
+        	}
+        }
+    };
+    
+    document.getElementById("loading").style.display = 'block';
+    if(userP && userP.properties){
+    	for(i=0;i<userP.properties.length;i++){
+	    	if(document.getElementById(userP.properties[i].key)){
+	 			document.getElementById(userP.properties[i].key).innerText = "";       	
+	 		}
+    	}	
+    }
+    
+    xhttp.open("GET", sfUrl+uid, true);
+    xhttp.send();
+}
+
+function getSelectUser(){
+	
+	for(i=1; i<=users.length;i++){
+		if(document.getElementById("userId"+i).checked) {
+			return users[i-1];
+		}
+	}
+	
+}
+
+function getSelectUser1(){
+	
+	for(i=1; i<=users.length;i++){
+		if(document.getElementById("user_id"+i).checked) {
+			return users[i-1];
+		}
+	}
+	
+}
+
+function getExpandAttr(){
+	var uid = document.getElementById("exp_uid").value;
+	var path = document.getElementById("exp_nav").value;
+	
+	var aUrl = "http://config.cc.toronto.ca:15096/eis_sfad/SF_Attr?userId="+uid+"&path="+path;
+
+	console.log(uid+"  "+path+"   "+aUrl);
+
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+    	     	var userP = JSON.parse(this.responseText);
+             	document.getElementById("attrResponse").value = JSON.stringify(userP, undefined, 2);       	
+        }
+    };
+    xhttp.open("GET", aUrl, true);
+    xhttp.send();
+}
+
+function updateCityAttr(){
+	
+	var cn = document.getElementById("cnValue").value;
+	var mail = document.getElementById("mailValue").value;
+	var phone = document.getElementById("phoneValue").value;
+	
+	var uid = getSelectUser1();
+	
+	console.log(uid+"  "+cn+ "  "+mail);
+	
+	document.getElementById("upsertResponse").value ="";
+	  	
+   	var xhttp = new XMLHttpRequest();
+       xhttp.onreadystatechange = function() {
+       	if (this.readyState == 4){
+               console.log(this.responseText);
+               var userP = JSON.parse(this.responseText);
+            	document.getElementById("upsertResponse").value += JSON.stringify(userP, undefined, 2); 
+           
+            	document.getElementById("upsertResponse").value += "\n\n\n";
+       	}
+       };
+       
+    var data = new FormData();
+   	
+   	data.append('userId', uid);
+   	data.append('nid', cn);
+   	data.append("email", mail);
+   	data.append("phone", phone);
+    
+   	xhttp.open("POST", "http://config.cc.toronto.ca:15096/eis_sfad/SF_User_NID", true);
+   	xhttp.send(data);
+   
+}
+
+
+var sfUrl= 'http://config.cc.toronto.ca:15096/eis_sfad/SF_User?userId=';
+
+var userP;
+
+const users = ["8164662","8015378","8169211","8155779","8220013","8130186"];
+
+function openTab(evt, tabName) {
+	  var i, x, tablinks;
+	  x = document.getElementsByClassName("content-tab");
+	  for (i = 0; i < x.length; i++) {
+	      x[i].style.display = "none";
+	  }
+	  tablinks = document.getElementsByClassName("tab");
+	  for (i = 0; i < x.length; i++) {
+	      tablinks[i].className = tablinks[i].className.replace(" is-active", "");
+	  }
+	  document.getElementById(tabName).style.display = "block";
+	  evt.currentTarget.className += " is-active";
+	}
+	
+
+
+	
+</script>
+
+</head>
+<body >
+
+<section class="hero is-dark is-small">
+<div class="hero-head">
+    <header class="navbar">
+      <div class="container">
+        <div class="navbar-brand">
+          <a class="navbar-item">
+            <img src="https://www.toronto.ca/wp-content/themes/cot/img/logo.svg" alt="City of Toronto" width="225" height="70">
+          </a>
+          <span class="navbar-burger" data-target="navbarMenuHeroC">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </div>
+        <div id="navbarMenuHeroC" class="navbar-menu">
+          <div class="navbar-end">
+            <a class="navbar-item is-active" href="SF_User.html">
+              Home
+            </a>
+            <a class="navbar-item" href="SF_OrgUnit.html">
+              OrgUnit
+            </a>
+            
+          </div>
+        </div>
+      </div>
+    </header>
+</div>
+<div class="hero-body">
+  <div class="container has-text-centered">
+      <h1 class="title">
+        Employee Data SuccessFactors/eDirectory API Test Client 
+      </h1>
+    </div>
+</div> 
+
+<div class="hero-foot">
+<nav class="tabs is-boxed is-fullwidth is-large">
+  <div class="container">
+      <ul>
+        <li class="tab is-active" onclick="openTab(event,'sfad')"><a >Read SF  Write LDAP</a></li>
+        <li class="tab" onclick="openTab(event,'adsf')"><a>Read LDAP  Write SF</a></li>
+        <li class="tab" onclick="openTab(event,'sfexp')"><a>SF Tool Box</a></li>
+      </ul>
+  </div>  
+</nav>
+</div>
+</section>
+
+<div class="container section">
+    <div id="sfad" class="content-tab" >
+				
+		<div><span id="responseMsg1"></span></div>
+		
+		<div class="section">
+		  <div class="container">	
+		 	<article class="message">
+			  <div class="message-header">
+				  <input class="is-checkradio ml-6" id="userId1" type="radio" value="8164662" name="userId" checked="checked">
+				  <label>8164662</label>
+				  <input class="is-checkradio ml-6" id="userId2" type="radio" value="8015378" name="userId">
+				  <label>8015378</label>
+				  <input class="is-checkradio ml-6" id="userId3" type="radio" value="8169211" name="userId">
+				  <label>8169211</label>
+				  <input class="is-checkradio ml-6" id="userId4" type="radio" value="8155779" name="userId">
+				  <label>8155779</label>
+				  <input class="is-checkradio ml-6" id="userId5" type="radio" value="8220013" name="userId">
+				  <label>8220013</label>
+				  <input class="ml-6" id="uid" type="text" name="uid" size="10" value="8164662">
+				  			
+				<button class="button is-small is-pulled-right" onclick="getUserProfile()">Get User Profile</button>
+			  </div>
+			  <div class="message-body">
+			  	<table class="table is-bordered is-striped is-fullwidth">
+		    		<thead>
+		    			<tr>
+		    				<th>SF Attribute</th><th>Value</th><th></th><th>LDAP attribute</th>  				
+		    			</tr>
+		    		</thead>
+		    		<tbody>
+		    			<tr><td>Employee Id</td><td id='empId'></td><td rowspan=22>
+		    				<img id="loading" src="./loading.gif" width="500" height="200" style="display:none"/>
+		    				<button class="is-multiline">Send to Network Folder</button></td><td>workforceID</td></tr>
+		    			<tr><td>First Name</td><td id='firstName'></td><td>givenName</td></tr>
+		    			<tr><td>Last Name</td><td id='lastName'></td><td>sn</td></tr>
+		    			<tr><td>Original Hire Date</td><td id='oHireDate'></td><td></td></tr>
+		    			<tr><td>Current Hire Date</td><td id='cHireDate'></td><td></td></tr>
+		    			<tr><td>Termination Date</td><td id='tDate'></td><td></td></tr>
+		    			<tr><td>Contract Type</td><td id='contractType'></td><td></td></tr>
+		    			<tr><td>Affiliation</td><td id='affiliation'></td><td></td></tr>
+		    			<tr><td>Employee Status</td><td id='status'></td><td></td></tr>
+		    			<tr><td>Event Reason</td><td id='eventReason'></td><td></td></tr>
+		    			<tr><td>Position</td><td id='postion'></td><td>title</td></tr>
+		    			<tr><td>Org Unit</td><td id='orgUnit'></td><td></td></tr>
+		    			<tr><td>Cost Center</td><td id='costCenter'></td><td></td></tr>
+		    			<tr><td>Service Area</td><td id='serviceArea'></td><td></td></tr>
+		    			<tr><td>Division</td><td id='division'></td><td></td></tr>
+		    			<tr><td>Section COT</td><td id='section'></td><td></td></tr>
+		    			<tr><td></td><td></td><td></td><td></td></tr>
+		    			<tr><td>COT Network ID</td><td id='networkId'></td><td>cn</td></tr>
+		    			<tr><td>City Email</td><td id='email'></td><td>mail</td></tr>
+		    			<tr><td>Work phone</td><td id='phone'></td><td>telephoneNumber</td></tr>
+		    			<tr><td>Immediate Superior</td><td id='manager'></td><td></td></tr>
+		    			<tr><td>Immediate Superior Email</td><td id='managerEmail'></td><td></td></tr>   			
+		    		</tbody>
+		    	</table>	    
+			  </div>
+			</article>  
+			
+		  </div>
+		  <div class="container">
+		  	<article class="message">
+			  <div class="message-header">
+			    <p>SF ODATA API response  
+			    	<span class="tag is-primary is-rounded mx-5">GET</span> 
+			    	https://api17preview.sapsf.com/odata/v2/User  
+		    	</p>
+			  </div>
+			  <div class="message-body">
+			  	<textarea class="textarea" id="fullResponse" rows=16></textarea>	    
+			  </div>
+			</article>  	
+		  </div>
+		  
+		</div> 
+	</div>
+	
+	<div id="adsf" class="content-tab" style="display:none">
+		<div><span id="responseMsg2"></span></div>
+		
+		<div class="section">
+		  <div class="container">	
+		 	<article class="message">
+			  <div class="message-header">
+				  <input class="is-checkradio ml-6" id="user_id1" type="radio" value="8164662" name="userId1" checked="checked">
+				  <label>8164662</label>
+				  <input class="is-checkradio ml-6" id="user_id2" type="radio" value="8015378" name="userId1">
+				  <label>8015378</label>
+				  <input class="is-checkradio ml-6" id="user_id3" type="radio" value="8169211" name="userId1">
+				  <label>8169211</label>
+				  <input class="is-checkradio ml-6" id="user_id4" type="radio" value="8155779" name="userId1">
+				  <label>8155779</label>
+				  <input class="is-checkradio ml-6" id="user_id5" type="radio" value="8220013" name="userId1">
+				  <label>8220013</label>
+			  </div>
+			  <div class="message-body">
+			  	<table class="table is-bordered is-striped is-fullwidth">
+		    		<thead>
+		    			<tr>
+		    				<th>eDirectory Attribute</th><th>Value</th><th id="loading"></th><th>SF attribute</th>  				
+		    			</tr>
+		    		</thead>
+		    		<tbody>
+		    			<tr><td>cn</td><td><input type="text" id='cnValue'></td><td rowspan=3><button onclick="updateCityAttr()">update SF</button></td><td>COT Network ID</td></tr>
+		    			<tr><td>mail</td><td><input type="text" id='mailValue'></td><td>City Email Address</td></tr>
+		    			<tr><td>telephoneNumber</td><td><input type="text" id='phoneValue'></td><td>Work Phone</td></tr>  			
+		    		</tbody>
+		    	</table>	    
+			  </div>
+			</article>  
+			
+		  </div>
+		  <div class="container">
+		  	<article class="message">
+			  <div class="message-header">
+			    <p>SF ODATA API response  
+			    	<span class="tag is-primary is-rounded mx-5">GET</span> 
+			    	https://api17preview.sapsf.com/odata/v2/upsert  
+		    	</p>
+			  </div>
+			  <div class="message-body">
+			  	<textarea class="textarea" id="upsertResponse" rows=16></textarea>	    
+			  </div>
+			</article>  	
+		  </div>		  
+		</div> 
+	</div>	
+	
+	<div id="sfexp" class="content-tab" style="display:none">	
+		
+		<div class="container columns">
+			<div class="card column">
+		  		<header class="card-header">
+		    		<p class="card-header-title">Explore deferred navigation</p>	
+		    	</header>
+		    	<div class="card-content">
+		    		<div class="content">
+		    			<div class="control">
+		  					<span>User ID</span>
+		    				<input class="input" type="text" id="exp_uid">
+		  				</div>
+		  				<div class="control">
+		  					<span>Navigation Path</span>
+		    				<input class="input" type="text" id="exp_nav">
+		    				<span class="is-pulled-right"> e.g. empInfo/personNav/emailNav</span>
+		    			</div>
+		    			<p></p>
+		    			<div class="control">
+		    				<button class="button is-link" onclick="getExpandAttr()">Get Expand SF Object</button>
+		  				</div>
+		  			</div>
+		  		</div>
+		  	</div>
+		  	
+		  	<div class="container column">
+			  	<article class="message">
+				  <div class="message-header">
+				    <p>Attribute Response</p>
+				  </div>
+				  <div class="message-body">
+				  	<textarea class="textarea" id="attrResponse" rows=12></textarea>	    
+				  </div>
+				</article>  	
+		  	</div>	
+		</div>  			
+	</div>
+	</div>
+</body>
+
+<script>
+var radios = document.querySelectorAll('input[type=radio][name="userId"]');
+radios.forEach(radio => radio.addEventListener('change', () => document.getElementById("uid").value = radio.value));	
+</script>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload Captiva</title>
+    <link rel="stylesheet" href="css/bulma.min.css">
+
+
+<script>
+
+function init(){
+//	setTicket();
+}
+
+function setTicket(){
+	
+	
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	     	cptvTicket = this.responseText;
+             	console.log("cptvTicket:"+cptvTicket);
+             	document.getElementById("cptv-ticket").value=cptvTicket;
+             	document.getElementById("responseMsg").innerText = this.responseText;
+        	}else{
+        		console.log("error:"+this.responseText);
+              	document.getElementById("responseMsg").innerText = this.responseText;
+        	}
+        }
+    };
+    xhttp.open("GET", connectUrl, true);
+    xhttp.send();
+}
+
+function submitBatch(){
+//	alert("batch submit");
+	
+	uploadBatch();
+	
+	
+	
+}
+
+function uploadBatch() {
+     var url = uploadUrl;
+     authSession = document.getElementById("sid").value;           
+  console.log("SID >>> "+authSession);   
+     var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+    	 if (this.readyState == 4){
+        	if(this.status == 200) {
+        		console.log("Upload done. "+this.responseText);
+        		var obj = JSON.parse(this.responseText);
+
+        		document.getElementById("responseMsg").value = 
+        			JSON.stringify(obj, undefined, 2);
+        	}else{
+        		console.log("error: "+this.status+"  "+this.responseText);
+        		document.getElementById("responseMsg").value = this.status+"\n"+this.responseText;
+        	}
+    	 }	
+     };
+     
+     document.getElementById("responseMsg").value = 'Loading ...';
+     var body = document.getElementById("req-body").value;
+     console.log("request-body >>> "+body);     
+     
+     xhttp.open("POST", url, true);
+     xhttp.setRequestHeader( "Authorization", authSession );
+     xhttp.setRequestHeader('Content-Type', 'application/json');
+    			
+     xhttp.send(body);
+}
+
+function login(){
+	console.log('ACTION --> login');
+	
+	var authAPIUrl = "https://was-intra-qa.toronto.ca/c3api_auth/v2/AuthService.svc/AuthSet";
+
+	var formData = new Object();
+   	formData.user = document.getElementById("userName").value;
+   	formData.pwd  = document.getElementById("userPass").value;
+   	formData.app = "demo";
+	
+	var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+     	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	    	var userInfo = JSON.parse(this.responseText);
+    	    	authSession = userInfo.sid;
+    	    	var name = userInfo.userID;
+    	    	document.getElementById("sid").value = authSession;
+    	    	document.getElementById("loginModal").classList.remove("is-active");
+    	    	showSubmitButton();
+        	}else{
+        		var errObj = JSON.parse(this.responseText);
+        		if(errObj!=null){
+            		document.getElementById("loginErrMsg").innerText = "error: "+errObj.error;
+        		}	
+        	}
+     	}
+     };
+     xhttp.open("POST", authAPIUrl, true);
+     xhttp.setRequestHeader( "Content-Type", "application/json" );
+    			
+     xhttp.send(JSON.stringify(formData));
+}	 	 
+
+function showSubmitButton(){
+	var sid = document.getElementById('sid').value;
+	if(sid){
+		document.getElementById('submitButton').classList.remove('is-hidden');
+	}else{
+		document.getElementById('submitButton').classList.add('is-hidden');
+	}
+	
+	
+}
+
+
+
+var authSession = "session";
+
+var uploadUrl = 'https://was-intra-qa.toronto.ca/upload_captiva/batch/new';
+
+var connectUrl= 'https://was-intra-qa.toronto.ca/upload_captiva/auth/connect';
+</script>
+
+</head>
+<body onload="init()">
+
+<nav class="level has-background-info">
+  <p class="level-item has-text-centered title">
+    Upload OT Captiva <br>API Specification and Test Client
+  </p>
+</nav>
+
+<div class="section">
+<div class="container has-background-grey-lighter"">
+	<header class="card-header">
+    	<p class="card-header-title">API Specification - Batch Endpoint</p>	
+    </header>
+	<div class="card-content">
+   		<div class="content">
+     		<span class="tag is-info">POST</span> <span>/upload_captiva/batch/{sourceType}</span>
+    		<table>
+    			<thead>
+    			<tr>
+    				<th>Parameter</th><th>Description</th><th>Parameter Type</th><th>Data Type</th>
+    			</tr>
+    			</thead>
+    			<tbody>
+    			<tr>
+    				<td>sourceType</td>
+    				<td>Type of batch.(value is 'new' or 'renew')</td>
+    				<td>Path</td>
+    				<td>String</td>
+    			</tr>	  
+    			<tr>
+    				<td>Content-Type</td>
+    				<td>value is 'application/json'</td>
+    				<td>Header</td>
+    				<td>String</td>
+    			</tr>	  
+    			<tr>
+    				<td>Authorization</td>
+    				<td>Auth Session ID, which got from AuthAPI</td>
+    				<td>Header</td>
+    				<td>String</td>
+    			</tr>	 
+    			<tr>
+    				<td>Batch-Content</td>
+    				<td>batch meta data and files (see example blow)</td>
+    				<td>Request body</td>
+    				<td>Json String</td>
+    			</tr>	    	   			
+    			</tbody>    		
+    		</table> 
+    	
+    	</div>
+ 	</div>	
+</div>
+</div>
+
+<div class="section">
+<div class="container is-fluid columns">
+  <div class="column is-two-thirds">
+
+ 	<div class="card">
+  		<header class="card-header">
+    		<p class="card-header-title">Test: https://was-intra-qa.toronto.ca/upload_captiva/batch/new</p>	
+    		<button class="button is-link is-hidden" id="submitButton" onclick="submitBatch()">Submit Batch</button>
+    	</header>
+    	<div class="card-content">
+    		<div class="content">
+    			
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">		
+    			  			<label class="label">Request Header</label>	 	
+			  				<div class="control">
+			  					<span>Content-Type</span>
+			    				<input class="input" type="text" value="application/json">
+			  				</div>
+			  				<div class="control">
+			  					<span>Authorization</span>
+			    				<input class="input" type="text" id="sid" onchange="showSubmitButton()">
+			    				<button class="button is-pulled-right is-rounded is-light" onclick="document.getElementById('loginModal').classList.add('is-active');">get auth session</button>
+			    			</div>
+			      		</div>
+
+			      	</div>	
+			    	<div class="column">		
+			      		<div class="field">
+			  				<label class="label">Request Body</label>
+			  				<div class="control">
+			    				<textarea class="textarea" id="req-body" rows="15">
+{
+    "id": "app-000289",
+    "metaData": [
+        {
+            "name": "User",
+            "value": "jguo",
+            "type": "string"
+        },
+        {
+            "name":"SourceType",
+            "value":"new",
+            "type":"string"
+        }
+    ],        
+    "files": [
+        {
+            "serviceId":"apptest",
+            "binId": "e12phnwHiSmAWZNaOq8I7g",
+            "id": "row-id2"
+        },
+        {
+            "serviceId":"apptest",
+            "binId": "1BQOWadkojfTP7WPMbXr6g",
+            "id": "row-id2"
+        }
+    ]        
+}
+			
+								</textarea>    		
+			  				</div>
+			  	 		 </div>	
+			  	 	</div>	 
+			  	
+			  	  
+    			</div>
+    		</div>
+ 		 </div>	
+ 	</div>	 
+  	
+  </div>
+  
+  <div class="column is-one-thirds">
+  
+  	<article class="message">
+	  <div class="message-header">
+	    <p>Response</p>
+	  </div>
+	  <div class="message-body">
+	  	<textarea class="textarea" id="responseMsg" rows=16></textarea>
+	    
+	  </div>
+	</article>  	
+  </div>
+ 
+  </div>
+</div>  
+
+
+<div class="modal" id="loginModal">
+  <div class="modal-background"></div>
+  
+  <div class="modal-content">
+	  <div class="box">
+	    <div id="loginErrMsg" class="has-text-danger m-2"></div>
+	  	<div class="control">
+			<label>User Name</label>
+			<input class="input" type="text" value="" id="userName">
+		</div>
+	    <div class="control">
+			<span>Password</span>
+			<input class="input" type="password" value="" id="userPass">
+		</div>
+		<div class="control m-3 has-text-centered">
+			<button class="button is-link is-centered" onclick="login()">Login</button>
+		</div>	
+	  </div>	
+  </div>
+  <button class="modal-close is-large" aria-label="close" onclick="document.getElementById('loginModal').classList.remove('is-active');"></button>	
+</div>
+	
+
+</body>
+</html>

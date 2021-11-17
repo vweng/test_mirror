@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload Captiva</title>
+    <link rel="stylesheet" href="css/bulma.min.css">
+
+
+<script>
+
+
+
+function login(){
+	
+	document.getElementById("responseMsg").value = "loading ... ";
+	
+	var formData = new FormData();
+
+	formData.append("user", document.getElementById("user").value);
+	formData.append("pwd", document.getElementById("pwd").value);
+	
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	     	var obj = JSON.parse(this.responseText);
+    	     	
+             	document.getElementById("responseMsg").value = JSON.stringify(obj, undefined, 2);
+        	}else{
+        		console.log("error:"+this.responseText);
+              	document.getElementById("responseMsg").value = this.responseText;
+        	}
+        }
+    };
+    xhttp.open("POST", loginUrl, true);
+   			
+    xhttp.send(formData);
+}
+
+var loginUrl= 'http://config.cc.toronto.ca:15056/upload_captiva/auth/login';
+</script>
+
+</head>
+<body >
+
+<nav class="level has-background-info">
+  <p class="level-item has-text-centered title">
+    Upload Captiva Client
+  </p>
+</nav>
+
+<div class="container is-fluid columns">
+  <div class="column">
+
+<!--  
+	<div class="card mb-4">
+  		<header class="card-header">
+    		<p class="card-header-title">Connect Endpoint</p>	
+    	</header>
+    	<div class="card-content">
+    		<div class="content">
+      			<span class="tag is-info">GET</span>.
+      			<span>http://config.cc.toronto.ca:15056/upload_captiva/auth/connect</span>
+    			<button class="button is-link is-pulled-right" onclick="setTicket()">Connect</button>
+    		</div>
+ 		 </div>	
+ 	</div>	 
+ -->  	
+ 	<div class="card">
+  		<header class="card-header">
+    		<p class="card-header-title">Login</p>	
+    	</header>
+    	<div class="card-content">
+    		<div class="content">
+ <!--   		<div class="mb-3">
+      			   <span class="tag is-info">POST</span>.
+      			   <span>http://config.cc.toronto.ca:15056/upload_captiva/auth/login</span>
+    			</div>
+ -->     			
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">			
+			  				<div class="control">
+			  					<span>UserName</span>
+			    				<input class="input" type="text" id="user">
+			  				</div>
+			  				<div class="control">
+			  					<span>Password</span>
+			    				<input class="input" type="password" id="pwd">
+			    			</div>
+			      		</div>
+			      		<div class="field">
+			  				<div class="control">
+			    				<button class="button is-link" onclick="login()">Login</button>
+			  				</div>
+			  	  		</div>	
+			      	</div>			  	  
+    			</div>
+    		</div>
+ 		 </div>	
+ 	</div>	 
+  	
+  </div>
+  
+  <div class="column">
+  
+  	<article class="message">
+	  <div class="message-header">
+	    <p>Response</p>
+	  </div>
+	  <div class="message-body">
+	  	<textarea class="textarea" id="responseMsg" rows=20></textarea>
+	    
+	  </div>
+</article>
+  
+  	
+  </div>
+ 
+  </div>
+
+
+
+
+
+	
+
+</body>
+</html>

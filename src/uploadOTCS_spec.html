@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload_OTCS_API_Spec</title>
+    <link rel="stylesheet" href="css/bulma.min.css">
+
+	<script>
+		function getRequest(url, header, id){
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("GET", url);
+			
+			var headerObj = getAllHeaders(header);
+			for (const [key, value] of Object.entries(headerObj)) {
+				console.log(key+" : "+value);
+				xhr.setRequestHeader(key, value);
+			}
+
+			xhr.onreadystatechange = function () {
+			   if (xhr.readyState === 4) {
+			      console.log(xhr.status);
+			      console.log(xhr.responseText);
+			      
+			      document.getElementById('respStatus'+id).value = xhr.status;
+			      var obj = JSON.parse(xhr.responseText);
+
+	        	  document.getElementById("respContent"+id).value = 
+	        			JSON.stringify(obj, undefined, 2);
+			   }};
+
+			xhr.send();
+		}
+		
+		function postRequest(url, header, data, id){
+
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", url);
+
+			var headerObj = getAllHeaders(header);
+			for (const [key, value] of Object.entries(headerObj)) {
+				console.log(key+" : "+value);
+				xhr.setRequestHeader(key, value);
+			}
+
+			xhr.onreadystatechange = function () {
+			   if (xhr.readyState === 4) {
+			      console.log(xhr.status);
+			      console.log(xhr.responseText);
+			      
+			      document.getElementById('respStatus'+id).value = xhr.status;
+			      var obj = JSON.parse(xhr.responseText);
+
+	        	  document.getElementById("respContent"+id).value = 
+	        			JSON.stringify(obj, undefined, 2);
+			   }};
+
+//			var data = '{"login":"my_login","password":"my_password"}';
+
+			xhr.send(data);
+		}
+		
+		function getAllHeaders(queryString) {
+
+			  // we'll store the parameters here
+			  var obj = {};
+
+			  // if query string exists
+			  if (queryString) {
+
+			    // stuff after # is not part of query string, so get rid of it
+			    queryString = queryString.split('#')[0];
+
+			    // split our query string into its component parts
+			    var arr = queryString.split('&');
+
+			    for (var i = 0; i < arr.length; i++) {
+			      // separate the keys and the values
+			      var a = arr[i].split(':');
+
+			      // set parameter name and value (use 'true' if empty)
+			      var paramName = a[0];
+			      var paramValue = typeof (a[1]) === 'undefined' ? true : a[1];
+
+			      // (optional) keep case consistent
+			      paramName = paramName.toLowerCase();
+			      if (typeof paramValue === 'string') paramValue = paramValue.toLowerCase();
+
+			      // if the paramName ends with square brackets, e.g. colors[] or colors[2]
+			      if (paramName.match(/\[(\d+)?\]$/)) {
+
+			        // create key if it doesn't exist
+			        var key = paramName.replace(/\[(\d+)?\]/, '');
+			        if (!obj[key]) obj[key] = [];
+
+			        // if it's an indexed array e.g. colors[2]
+			        if (paramName.match(/\[\d+\]$/)) {
+			          // get the index value and add the entry at the appropriate position
+			          var index = /\[(\d+)\]/.exec(paramName)[1];
+			          obj[key][index] = paramValue;
+			        } else {
+			          // otherwise add the value to the end of the array
+			          obj[key].push(paramValue);
+			        }
+			      } else {
+			        // we're dealing with a string
+			        if (!obj[paramName]) {
+			          // if it doesn't exist, create property
+			          obj[paramName] = paramValue;
+			        } else if (obj[paramName] && typeof obj[paramName] === 'string'){
+			          // if property does exist and it's a string, convert it to an array
+			          obj[paramName] = [obj[paramName]];
+			          obj[paramName].push(paramValue);
+			        } else {
+			          // otherwise add the property
+			          obj[paramName].push(paramValue);
+			        }
+			      }
+			    }
+			  }
+
+			  return obj;
+		}
+		
+		function openTab(evt, tabName) {
+			  var i, x, tablinks;
+			  x = document.getElementsByClassName("content-tab");
+			  for (i = 0; i < x.length; i++) {
+			      x[i].style.display = "none";
+			  }
+			  tablinks = document.getElementsByClassName("tab");
+			  for (i = 0; i < x.length; i++) {
+			      tablinks[i].className = tablinks[i].className.replace(" is-active", "");
+			  }
+			  document.getElementById(tabName).style.display = "block";
+			  evt.currentTarget.className += " is-active";
+		}
+	
+		function getFolder(){
+			var folderName = document.getElementById('folderName1').value;
+			var sid = document.getElementById('sid1').value;
+			var url = "https://config.cc.toronto.ca/eis_upload_otcs/getFolders/"+folderName;
+			var header = "Authorization:"+sid;
+			
+			document.getElementById('requestCurl1').value = "GET "+url+"\n-H "+header;
+			document.getElementById("respStatus1").value = "";
+      	  	document.getElementById("respContent1").value = "   Loading ... ...";
+			
+			getRequest(url, header, "1");
+		}
+		
+		function createFolder(){
+			var parentName = document.getElementById('folderName3').value;
+			var folderName = document.getElementById('folderName4').value;
+			var sid = document.getElementById('sid3').value;
+			var url = "https://config.cc.toronto.ca/eis_upload_otcs/createFolder";
+			var header = "Authorization:"+sid;
+			
+			var formData = new FormData();
+			formData.append("parent", parentName);
+			formData.append("name", folderName);
+			const queryString = new URLSearchParams(formData).toString();
+			
+			console.log(queryString)
+			
+			document.getElementById('requestCurl3').value = "POST "+url+"\n-H "+header+"\n-d "+queryString;
+			document.getElementById('respStatus3').value = "";
+      	  	document.getElementById("respContent3").value = "   Loading ... ...";
+			
+			postRequest(url, header, formData, "3");
+		}
+		
+		function listFolder(){
+			var folderName = document.getElementById('folderName2').value;
+			var sid = document.getElementById('sid2').value;
+			var url = "https://config.cc.toronto.ca/eis_upload_otcs/listFolder/"+folderName;
+			var header = "Authorization:"+sid;
+			
+			document.getElementById('requestCurl2').value = "GET "+url+"\n-H "+header;
+			document.getElementById('respStatus2').value = "";
+		    document.getElementById("respContent2").value = "   Loading ... ...";
+			
+			getRequest(url, header, "2");
+		}
+		
+		function uploadFile(){
+			var file = document.getElementById( 'file' ).files[0];
+			var folderName = document.getElementById('folderName5').value;
+			var sid = document.getElementById('sid5').value;
+			var url = "https://config.cc.toronto.ca/eis_upload_otcs/uploadFile/"+folderName;
+			var header = "Authorization:"+sid;
+			
+			var formData = new FormData();
+			formData.append("file", file);
+			const queryString = new URLSearchParams(formData).toString();
+			
+			console.log(queryString)
+			
+			document.getElementById('requestCurl5').value = "POST "+url+"\n-H "+header+"\n-d "+queryString;
+			document.getElementById('respStatus5').value = "";
+      	  	document.getElementById("respContent5").value = "   Loading ... ...";
+			
+			postRequest(url, header, formData, "5");
+		}
+		
+		function retrieveFile() {
+			
+			var sid = document.getElementById('sid6').value;
+			var fileId = document.getElementById('binId').value;
+			var url = "https://config.cc.toronto.ca/eis_upload_otcs/retrieveFile/"+fileId;
+			var header = "Authorization:"+sid;
+			
+			document.getElementById('requestCurl6').value = "GET "+url+"\n-H "+header;
+			document.getElementById('respStatus6').value = "";
+      	  	document.getElementById("respContent6").value = "   Loading ... ...";
+
+			document.getElementById("showFile").innerHTML = "";
+					                    
+		    var xhttp = new XMLHttpRequest();
+
+		    xhttp.onreadystatechange = function() {
+		        if (this.readyState == 4){
+		             if(this.status == 200) {
+		                   var contentType = xhttp.getResponseHeader("Content-Type");
+		                   var blob = xhttp.response;
+
+							var embedFile = document.createElement("embed");
+							embedFile.setAttribute("src",window.URL.createObjectURL(blob));
+		                    embedFile.setAttribute("type",contentType);
+		                                
+		                    if(contentType.includes("pdf")){
+		                          embedFile.setAttribute("width","65%");  
+		                          embedFile.setAttribute("height","100%");                             
+		                    }
+		                    
+		                    document.getElementById("showFile").appendChild(embedFile);
+		                                
+		                    document.getElementById('respStatus6').value = xhttp.status;
+		                    document.getElementById("respContent6").value = "";
+		                                
+		              }else{
+		            	  document.getElementById('respStatus6').value = xhttp.status;
+		                  document.getElementById("respContent6").value = xhttp.response.text();
+		        	  }
+		        }
+		    };
+		                    
+		    
+		    xhttp.open("GET", url, true);
+		    xhttp.responseType = "blob";
+		    xhttp.setRequestHeader("Authorization", sid);
+		    xhttp.send();
+		}
+		
+	</script>
+
+</head>
+<body >
+
+<section class="hero is-dark is-small">
+<div class="hero-body">
+  <div class="container has-text-centered">
+      <h1 class="title">
+        Upload OTCS API Specification 
+      </h1>
+    </div>
+</div> 
+
+<div class="hero-foot">
+<nav class="tabs is-boxed is-fullwidth is-large">
+  <div class="container">
+      <ul>
+        <li class="tab is-active" onclick="openTab(event,'folderEnd')"><a >Folder Endpoints</a></li>
+        <li class="tab" onclick="openTab(event,'fileEnd')"><a>File Endpoints</a></li>
+      </ul>
+  </div>  
+</nav>
+</div>
+</section>
+
+  <div class="container section">
+    <div id="folderEnd" class="content-tab" >
+				
+		<div><span id="responseMsg1"></span></div>
+
+		<div class="container">	
+		 	<article class="message">
+			  <div class="message-header">
+				  <div><span class="tag is-info">GET </span>
+      			   <span> /getFolders/{parent_folder}</span></div>
+      			  <span> Get all folders in a parent folder.</span> 
+			  </div>
+			  <div class="message-body">
+			  	
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">		
+    			  			<label class="label">Request Header</label>	 	
+			  				<div class="control">
+			  					<span>Authorization</span>
+			    				<input class="input" type="text" id="sid1">
+			    			</div>
+			      		</div>
+			      		<div class="field">
+			  				<label class="label">Path Parameter</label>
+			  				<div class="control">
+			  					<span>parent_folder</span>
+			    				<input class="input" type="text" id="folderName1" value="Fair_Pass">
+							</div>
+						</div>
+						<div class="field">
+			  				<div class="control">
+			    				<button class="button is-link" onclick="getFolder()">submit</button>
+			  				</div>
+			  	  		</div>	
+			      	</div>	
+			    	<div class="column">	
+			    		<div class="field">
+			  				<label class="label">Request Sent</label>	
+							<textarea id="requestCurl1" rows="3" cols="80"></textarea>
+						</div>	
+			      		<div class="field">
+			  				<label class="label">Response  <input type="text" id="respStatus1" size="6"> </label>	
+							<textarea id="respContent1" rows="10" cols="80"></textarea>
+						</div>
+					</div>		
+		  		</div>
+			  </div> 
+		   </article>	
+		   
+		   <article class="message">
+			  <div class="message-header">
+				  <div><span class="tag is-warning">POST</span>
+      			   <span>/createFolder</span></div>
+      			  <span> Create a folder in a parent folder.</span> 
+			  </div>
+			  <div class="message-body">
+			  	
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">		
+    			  			<label class="label">Request Header</label>	 	
+			  				<div class="control">
+			  					<span>Authorization</span>
+			    				<input class="input" type="text" id="sid3">
+			    			</div>
+			      		</div>
+			      		<div class="field">
+			  				<label class="label">Parameter</label>
+			  				<div class="control">
+			  					<span>parent</span>
+			    				<input class="input" type="text" id="folderName3" value="Fair_Pass">
+							</div>
+			  				<div class="control">
+			  					<span>name</span>
+			    				<input class="input" type="text" id="folderName4" value="">
+							</div>
+						</div>
+						<div class="field">
+			  				<div class="control">
+			    				<button class="button is-link" onclick="createFolder()">submit</button>
+			  				</div>
+			  	  		</div>	
+			      	</div>	
+			    	<div class="column">	
+			    		<div class="field">
+			  				<label class="label">Request Sent</label>	
+							<textarea id="requestCurl3" rows="3" cols="80"></textarea>
+						</div>	
+			      		<div class="field">
+			  				<label class="label">Response  <input type="text" id="respStatus3" size="6"> </label>	
+							<textarea id="respContent3" rows="10" cols="80"></textarea>
+						</div>
+					</div>		
+		  		</div>
+			  </div> 
+		   </article>	
+		   
+		   <article class="message">
+			  <div class="message-header">
+				  <div><span class="tag is-info">GET </span>
+      			   <span> /listFolder/{folder}</span></div>
+      			  <span> List all files in a folder.</span> 
+			  </div>
+			  <div class="message-body">
+			  	
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">		
+    			  			<label class="label">Request Header</label>	 	
+			  				<div class="control">
+			  					<span>Authorization</span>
+			    				<input class="input" type="text" id="sid2">
+			    			</div>
+			      		</div>
+			      		<div class="field">
+			  				<label class="label">Path Parameter</label>
+			  				<div class="control">
+			  					<span>folder</span>
+			    				<input class="input" type="text" id="folderName2" value="Fair_Pass">
+							</div>
+						</div>
+						<div class="field">
+			  				<div class="control">
+			    				<button class="button is-link" onclick="listFolder()">submit</button>
+			  				</div>
+			  	  		</div>	
+			      	</div>	
+			    	<div class="column">	
+			    		<div class="field">
+			  				<label class="label">Request Sent</label>	
+							<textarea id="requestCurl2" rows="3" cols="80"></textarea>
+						</div>	
+			      		<div class="field">
+			  				<label class="label">Response  <input type="text" id="respStatus2" size="6"> </label>	
+							<textarea id="respContent2" rows="10" cols="80"></textarea>
+						</div>
+					</div>		
+		  		</div>
+			  </div> 
+		   </article>	
+	    </div>
+	  </div>
+	  
+	  <div id="fileEnd" class="content-tab" style="display:none">
+				
+		<div><span id="responseMsg1"></span></div>
+
+		<div class="container">	
+		 	 <article class="message">
+			  <div class="message-header">
+			  	<div>
+				   <span class="tag is-warning">POST </span>
+      			   <span> /uploadFile/{folder}</span>
+      			</div>
+      			<span> Upload a file in a folder.</span>   
+			  </div>
+			  <div class="message-body">
+			  	
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">		
+    			  			<label class="label">Request Header</label>	 	
+			  				<div class="control">
+			  					<span>Authorization</span>
+			    				<input class="input" type="text" id="sid5">
+			    			</div>
+			      		</div>
+			      		<div class="field">
+			  				<label class="label">Parameter</label>
+			  				<div class="control">
+			  					<span>file</span>
+			  					<input type="file" name="file" id="file" />
+							</div>
+							<br><br>
+			  				<div class="control">
+			  					<span>folder (path parameter)</span>
+			    				<input class="input" type="text" id="folderName5" value="">
+							</div>
+						</div>
+						<div class="field">
+			  				<div class="control">
+			    				<button class="button is-link" onclick="uploadFile()">submit</button>
+			  				</div>
+			  	  		</div>	
+			      	</div>	
+			    	<div class="column">	
+			    		<div class="field">
+			  				<label class="label">Request Sent</label>	
+							<textarea id="requestCurl5" rows="3" cols="80"></textarea>
+						</div>	
+			      		<div class="field">
+			  				<label class="label">Response  
+			  				<input type="text" id="respStatus5" size="6"> </label>	
+							<textarea id="respContent5" rows="10" cols="80"></textarea>
+						</div>
+					</div>		
+		  		</div>
+			  </div> 
+		   </article>	
+		   
+		   <article class="message">
+			  <div class="message-header">
+				 <div>
+				 	<span class="tag is-info">GET </span> 
+				 	<span> /retrieveFile/{binId}</span>
+				 </div>
+      			 <span> Retrieve a file in a folder.</span>
+			  </div>
+			  <div class="message-body">
+			  	
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">		
+    			  			<label class="label">Request Header</label>	 	
+			  				<div class="control">
+			  					<span>Authorization</span>
+			    				<input class="input" type="text" id="sid6">
+			    			</div>
+			      		</div>
+			      		<div class="field">
+			  				<label class="label">Path Parameter</label>
+			  				<div class="control">
+			  					<span>binId</span>
+			    				<input class="input" type="text" id="binId" value="">
+							</div>
+						</div>
+						<div class="field">
+			  				<div class="control">
+			    				<button class="button is-link" onclick="retrieveFile()">submit</button>
+			  				</div>
+			  	  		</div>	
+			      	</div>	
+			    	<div class="column">	
+			    		<div class="field">
+			  				<label class="label">Request Sent</label>	
+							<textarea id="requestCurl6" rows="3" cols="80"></textarea>
+						</div>	
+			      		<div class="field">
+			  				<label class="label">Response  <input type="text" id="respStatus6" size="6"> </label>	
+							<textarea id="respContent6" rows="2" cols="80"></textarea>
+							<div id="showFile"></div>
+						</div>
+					</div>		
+		  		</div>
+			  </div> 
+		   </article>	
+	    </div>
+	  </div>
+   </div>	  
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+	<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SuccessFactor User</title>
+    
+    <link rel="stylesheet" href="css/bulma-docs.min.css">
+    <link rel="stylesheet" href="css/dataTables.bulma.min.css">
+    
+    
+    <script src="js/jquery-3.5.1.js"></script>
+	<script src="js/jquery.dataTables.min.js"></script>
+	<script src="js/dataTables.bulma.min.js"></script>
+	
+	<script>
+	
+	function writeOrgUnit(){
+		
+		document.getElementById("loading").style.display = 'block';
+		
+		var xhttp = new XMLHttpRequest();
+	    xhttp.onreadystatechange = function() {
+	    	if (this.readyState == 4){	    		
+	        	if(this.status == 200) {
+	        		
+	        		document.getElementById("loading").style.display = 'none';
+	        		
+	    	     	var res = JSON.parse(this.responseText);
+	             	console.log("result:"+res.size);
+	             	
+	             	document.getElementById("table1_caption1").innerHTML = "SIZE: "+res.size;
+	             	document.getElementById("table1_caption2").innerHTML = "cust_CompanyCode: "+res.cust_CompanyCode;
+	             	
+	             	var tableBody = "";
+	             	for(i=0;i<res.orgUnits.length;i++){
+	             		tableBody += "<tr>";
+	             		tableBody += "<td>"+addStaffButton(res.orgUnits[i].externalCode)+"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].externalCode +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].externalName +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_ShortName +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_OrgLevel +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_headofOrgUnit +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_DivisionCode +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_FMArea +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_HeadOfUnit +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_parentOrgUnit +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].effectiveStatus +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_BranchCode +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_costCenter +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].cust_ServiceAreaCode +"</td>";
+	             		tableBody += "<td>"+res.orgUnits[i].effectiveStartDate +"</td>";
+	             		tableBody += "</tr>";
+	             	}	
+	
+	             	document.getElementById("table1_body").innerHTML = tableBody;
+	             	
+	             	$('#dataTable1').DataTable({
+	                    "scrollX": true
+	                } );
+	             	
+	        	}else{
+	        		
+	        		console.log("error:"+this.responseText);
+	        		document.getElementById("table1_body").innerHTML = "<tr><td>"+this.responseText+"</td></tr>";
+	        	}
+	        }
+	    };
+	        
+	    xhttp.open("GET", orgUnitUrl, true);
+	    xhttp.send();
+	}
+	
+	function writeUser(){
+		
+		if ($.fn.dataTable.isDataTable('#dataTable2')) {
+	        $('#dataTable2').DataTable().destroy();
+	    }
+		
+		document.getElementById("loading").style.display = 'block';
+		
+		var xhttp = new XMLHttpRequest();
+	    xhttp.onreadystatechange = function() {
+	    	if (this.readyState == 4){
+	        	if(this.status == 200) {
+	        		
+	        	    document.getElementById("loading").style.display = 'none';
+	        	    
+	    	     	var res = JSON.parse(this.responseText);
+	             	console.log("result:"+res.size);
+	             	
+	             	document.getElementById("table2_caption1").innerHTML = "SIZE: "+res.size;
+	             	document.getElementById("table2_caption2").innerHTML = "orgUnit: "+res.orgUnit;
+	             	
+	             	var tableBody = "";
+	             	for(i=0;i<res.users.length;i++){
+	             		tableBody += "<tr>";
+	             		tableBody += "<td>"+res.users[i].empId +"</td>";
+	             		tableBody += "<td>"+res.users[i].firstName +"</td>";
+	             		tableBody += "<td>"+res.users[i].lastName +"</td>";
+	             		tableBody += "<td>"+res.users[i].email +"</td>";
+	             		tableBody += "</tr>";
+	             	}	
+	
+	             	document.getElementById("table2_body").innerHTML = tableBody;
+	             	
+	             	
+	             	
+	             	$('#dataTable2').DataTable({
+	                    "scrollX": true
+	                } );
+	             	
+	        	}else{
+	        		
+	        		console.log("error:"+this.responseText);
+	        		document.getElementById("table2_body").innerHTML = "<tr><td>"+this.responseText+"</td></tr>";
+	        	}
+	        }
+	    };	    
+	    
+	    xhttp.open("GET", userOrgUnitUrl+"?code="+orgUnitCode, true);
+	    xhttp.send();
+	}
+	
+	function addStaffButton(code){
+		return '<a class="button is-small is-info is-outlined" href="javascript:goStaff(\''+code+'\');">Staff</a>';
+	}
+	
+	function goStaff(code){
+		orgUnitCode = code;
+		document.getElementById("userTab").click();
+	}
+	
+	function openTab(evt, tabName) {
+		console.log(evt + " , "+tabName);
+		  var i, x, tablinks;
+		  x = document.getElementsByClassName("content-tab");
+		  for (i = 0; i < x.length; i++) {
+		      x[i].style.display = "none";
+		  }
+		  tablinks = document.getElementsByClassName("tab");
+		  for (i = 0; i < x.length; i++) {
+		      tablinks[i].className = tablinks[i].className.replace(" is-active", "");
+		  }
+		  document.getElementById(tabName).style.display = "block";
+		  evt.currentTarget.className += " is-active";
+		  
+		  if(tabName=="user"){
+			  writeUser();
+		  }
+		  if(tabName="orgUnit"){
+			  document.getElementById("table2_body").innerHTML = "";
+		  }
+	}
+	
+	function showTab(tabName) {
+		  var i, x, tablinks;
+		  x = document.getElementsByClassName("content-tab");
+		  for (i = 0; i < x.length; i++) {
+		      x[i].style.display = "none";
+		  }
+		  tablinks = document.getElementsByClassName("tab");
+		  for (i = 0; i < x.length; i++) {
+		      tablinks[i].className = tablinks[i].className.replace(" is-active", "");
+		  }
+		  document.getElementById(tabName).style.display = "block";
+		  document.getElementById(tabName).className += "is-active";
+		  if(tabName=="user"){
+			  writeUser();
+		  }
+		  return false;
+	}
+	
+	var orgUnitUrl = "http://config.cc.toronto.ca:15096/eis_sfad/SF_OrgUnit";
+	var userOrgUnitUrl = "http://config.cc.toronto.ca:15096/eis_sfad/SF_User_OrgUnit";
+	
+	var orgUnitCode = "20000050";
+	
+	</script>
+</head>	
+
+<body onload="writeOrgUnit()">
+
+<section class="hero is-success is-small">
+	<div class="hero-head">
+	    <header class="navbar">
+	      <div class="container">
+	        <div class="navbar-brand">
+	          <a class="navbar-item">
+	            <img src="https://www.toronto.ca/wp-content/themes/cot/img/logo.svg" alt="City of Toronto"  width="225" height="70">
+	          </a>
+	          <span class="navbar-burger" data-target="navbarMenuHeroC">
+	            <span></span>
+	            <span></span>
+	            <span></span>
+	          </span>
+	        </div>
+	        <div id="navbarMenuHeroC" class="navbar-menu">
+	          <div class="navbar-end">
+	            <a class="navbar-item" href="SF_User.html">
+	              Home
+	            </a>
+	            <a class="navbar-item is-active" href="SF_OrgUnit.html">
+	              OrgUnit
+	            </a>
+	            
+	          </div>
+	        </div>
+	      </div>
+	    </header>
+	</div>
+	<div class="hero-body">
+	  <div class="container has-text-centered">
+	      <h1 class="title">
+	        SuccessFactors OrgUnit User test client 
+	      </h1>
+	    </div>
+	</div> 
+	
+	<div class="hero-foot">
+		<nav class="tabs is-boxed is-large">
+		  <div class="container">
+		      <ul>
+		        <li class="tab is-active" id="orgUnitTab" onclick="openTab(event,'orgunit')"><a >OrgUnit</a></li>
+		        <li class="tab" id="userTab" onclick="openTab(event,'user')"><a>User</a></li>
+		      </ul>
+		  </div>  
+		</nav>
+	</div>
+</section>
+
+<section>
+	<div class="container">
+	    <div id="orgunit" class="content-tab" >
+			<div class = "container scrolling-wrapper">
+				<span class="tag is-success is-light" id="table1_caption1"></span>
+				<span class="tag is-success is-light" id="table1_caption2"></span>
+				<span class="tag is-info is-light">http://config.cc.toronto.ca:15096/eis_sfad/SF_OrgUnit</span><br><br>
+				<table id="dataTable1" class="table is-striped">
+					
+					 <thead class="is-size-7">
+					   <tr>
+					   	 <th></th>
+					     <th>external Code</th>
+					     <th>external Name</th>
+					     <th>cust_ ShortName</th>
+					     <th>cust_ OrgLevel</th>
+					     <th>cust_ headofOrgUnit</th>
+					     <th>cust_ DivisionCode</th>
+					     <th>cust_ FMArea</th>
+					     <th>cust_ HeadOfUnit</th>
+					     <th>cust_ parentOrgUnit</th>
+					     <th>effective Status</th>
+					     <th>cust_ BranchCode</th>
+					     <th>cust_ costCenter</th>
+					     <th>cust_ ServiceArea Code</th>
+					     <th>effective StartDate</th>
+					   </tr>
+					 </thead>
+					 <tbody id="table1_body"  class="is-size-7">
+					 
+					 </tbody>
+				</table> 
+			</div>	
+
+		</div>
+		<div id="user" class="content-tab" style="display:none">
+			<div class = "container scrolling-wrapper">
+				<span class="tag is-success is-light" id="table2_caption1"></span>
+				<span class="tag is-success is-light" id="table2_caption2"></span>
+				<span class="tag is-info is-light">http://config.cc.toronto.ca:15096/eis_sfad/SF_User_OrgUnit?code={orgUnitCode}</span><br><br>
+				<table id="dataTable2" class="table is-striped">
+					
+					 <thead class="is-size-7">
+					   <tr>
+					     <th>Employee ID</th>
+					     <th>First Name</th>
+					     <th>Last Name</th>
+					     <th>Email</th>
+					   </tr>
+					 </thead>
+					 <tbody id="table2_body"  class="is-size-7">
+					 
+					 </tbody>
+				</table> 
+			</div>
+		</div>
+		<div id="loading"><img src="./loading.gif" width="500" height="200"/></div>
+	</div>
+</section>		
+		
+</body>
+
+</html>

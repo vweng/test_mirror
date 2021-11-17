@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Upload Captiva</title>
+    <link rel="stylesheet" href="css/bulma.min.css">
+
+
+<script>
+
+function init(){
+//	setTicket();
+}
+
+function setTicket(){
+	
+	
+	var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+    	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	     	cptvTicket = this.responseText;
+             	console.log("cptvTicket:"+cptvTicket);
+             	document.getElementById("cptv-ticket").value=cptvTicket;
+             	document.getElementById("responseMsg").innerText = this.responseText;
+        	}else{
+        		console.log("error:"+this.responseText);
+              	document.getElementById("responseMsg").innerText = this.responseText;
+        	}
+        }
+    };
+    xhttp.open("GET", connectUrl, true);
+    xhttp.send();
+}
+
+function submitBatch(){
+//	alert("batch submit");
+	
+	uploadBatch();
+	
+}
+
+function uploadBatch() {
+     var url = uploadUrl;
+     authSession = document.getElementById("sid").value;           
+  console.log("SID >>> "+authSession);   
+     var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+    	 if (this.readyState == 4){
+        	if(this.status == 200) {
+        		console.log("Upload done. "+this.responseText);
+        		var obj = JSON.parse(this.responseText);
+
+        		document.getElementById("responseMsg").value = 
+        			JSON.stringify(obj, undefined, 2);
+        	}else{
+        		console.log("error: "+this.responseText);
+        		document.getElementById("responseMsg").innerText = this.responseText;
+        	}
+    	 }	
+     };
+     
+//     document.getElementById("uploadMsg").innerHTML = '<img src="./loading.gif" />';
+     var body = document.getElementById("req-body").value;
+     console.log("request-body >>> "+body);
+     
+     
+     
+     xhttp.open("POST", url, true);
+     xhttp.setRequestHeader( "Authorization", authSession );
+     xhttp.setRequestHeader('Content-Type', 'application/json');
+    			
+     xhttp.send(body);
+}
+
+function login(){
+	console.log('ACTION --> login');
+	
+	var authAPIUrl = "https://was-intra-sit.toronto.ca/c3api_auth/v2/AuthService.svc/AuthSet";
+
+	var formData = new Object();
+   	formData.user = document.getElementById("user").value;
+   	formData.pwd  = document.getElementById("pwd").value;
+   	formData.app = "demo";
+	
+	var xhttp = new XMLHttpRequest();
+     xhttp.onreadystatechange = function() {
+     	if (this.readyState == 4){
+        	if(this.status == 200) {
+    	    	var userInfo = JSON.parse(this.responseText);
+    	    	authSession = userInfo.sid;
+    	    	var name = userInfo.userID;
+    	    	document.getElementById("userInfo").innerText = name;
+    	    	document.getElementById("loginZone").style.display = "none";
+        	}else{
+            	document.getElementById("userInfo").innerText = "error: "+this.responseText;
+        	}
+     	}
+     };
+     xhttp.open("POST", authAPIUrl, true);
+     xhttp.setRequestHeader( "Content-Type", "application/json" );
+    			
+     xhttp.send(JSON.stringify(formData));
+}	 	 
+
+
+
+var authSession = "session";
+
+var uploadUrl = 'https://was-intra-sit.toronto.ca/upload_captiva/batch/new';
+
+var connectUrl= 'https://was-intra-sit.toronto.ca/upload_captiva/auth/connect';
+</script>
+
+</head>
+<body onload="init()">
+
+<nav class="level has-background-info">
+  <p class="level-item has-text-centered title">
+    Upload Captiva Client
+  </p>
+</nav>
+
+<div class="container is-fluid columns">
+  <div class="column is-two-thirds">
+
+<!--  
+	<div class="card mb-4">
+  		<header class="card-header">
+    		<p class="card-header-title">Connect Endpoint</p>	
+    	</header>
+    	<div class="card-content">
+    		<div class="content">
+      			<span class="tag is-info">GET</span>.
+      			<span>http://config.cc.toronto.ca:15056/upload_captiva/auth/connect</span>
+    			<button class="button is-link is-pulled-right" onclick="setTicket()">Connect</button>
+    		</div>
+ 		 </div>	
+ 	</div>	 
+ -->  	
+ 	<div class="card">
+  		<header class="card-header">
+    		<p class="card-header-title">Submit Endpoint</p>	
+    	</header>
+    	<div class="card-content">
+    		<div class="content">
+    			<div class="mb-3">
+      			   <span class="tag is-info">POST</span>.
+      			   <span>https://was-intra-sit.toronto.ca/upload_captiva/batch/new</span>
+    			</div>
+    			<div class="ml-4 columns">
+    				<div class="column">		
+    			  		<div class="field">		
+    			  			<label class="label">Request Header</label>	 	
+			  				<div class="control">
+			  					<span>Content-Type</span>
+			    				<input class="input" type="text" value="application/json">
+			  				</div>
+			  				<div class="control">
+			  					<span>Authorization</span>
+			    				<input class="input" type="text" id="sid">
+			    			</div>
+			      		</div>
+			      		<div class="field">
+			  				<div class="control">
+			    				<button class="button is-link" onclick="submitBatch()">Submit Batch</button>
+			  				</div>
+			  	  		</div>	
+			      	</div>	
+			    	<div class="column">		
+			      		<div class="field">
+			  				<label class="label">Request Body</label>
+			  				<div class="control">
+			    				<textarea class="textarea" id="req-body" rows="15">
+{
+    "id": "application_id",
+    "metaData": [
+        {
+            "name": "User",
+            "value": "jguo",
+            "type": "string"
+        },
+        {
+            "name":"SourceType",
+            "value":"new",
+            "type":"string"
+        }
+    ],        
+    "files": [
+        {
+            "serviceId":"apptest",
+            "binId": "D_O0o9baFlfdnxYs9X1Ysw",
+            "id": "row-id2"
+        },
+        {
+            "serviceId":"apptest",
+            "binId": "SAoFpz7jege3Qgi3bGlskg",
+            "id": "row-id2"
+        }
+    ]        
+}
+			
+								</textarea>    		
+			  				</div>
+			  	 		 </div>	
+			  	 	</div>	 
+			  	
+			  	  
+    			</div>
+    		</div>
+ 		 </div>	
+ 	</div>	 
+  	
+  </div>
+  
+  <div class="column is-one-thirds">
+  
+  	<article class="message">
+	  <div class="message-header">
+	    <p>Response</p>
+	  </div>
+	  <div class="message-body">
+	  	<textarea class="textarea" id="responseMsg" rows=20></textarea>
+	    
+	  </div>
+</article>
+  
+  	
+  </div>
+ 
+  </div>
+
+
+</body>
+</html>
