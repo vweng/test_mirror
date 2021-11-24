@@ -1,0 +1,28 @@
+################################ 
+# This template is built to work with gitlab CI/CD setup, as detailed at following link:
+# https://toronto.atlassian.net/wiki/spaces/EISTS/pages/514850829/How+to+enable+GitLab+CI+EIS+flavour
+################################
+include:
+  - project: 'devops/gitlab-pipelines'
+    ref: REL-2.2
+    file: '/templates/ast-ci-template.yml'
+
+variables:
+  LONG_LIVED_BRANCHES: /master/ # only changes in long-lived will be versioned
+  PROP_FILE: ci-props.json  # where to extract project version and name
+#   DIST_DIR: target/lib # folder for build outputs, used for dependency-check
+
+sast: # Static Application Security Test (Whitebox)
+  extends: .eis_sonar_scan 
+  variables:
+    # BUILD_CMD: './mvnw' # For maven projects, use mvn wrapper - https://www.baeldung.com/maven-wrapper
+    # BUILD_OPTS: install dependency:copy-dependencies -DoutputDirectory=$DIST_DIR
+    SONAR_SRC: 'src'    # source folder to be scanned by sonarqube
+    # SONAR_BINARIES: "target/classes/main/java"  # compiled folder to be scanned by sonarqube
+
+.dast: # Dynamic Application Security Test (Blackbox)
+  extends: 
+    - .eis_zap_scan
+  variables:
+    ZAP_URL: https://portal.cc.toronto.ca
+      
