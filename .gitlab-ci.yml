@@ -7,6 +7,9 @@ include:
     ref: REL-2.2
     file: '/templates/ast-ci-template.yml'
 
+default:
+  tags: ['docker']
+
 variables:
   LONG_LIVED_BRANCHES: /master/ # only changes in long-lived will be versioned
   PROP_FILE: ci-props.json  # where to extract project version and name
