@@ -11,21 +11,18 @@ default:
   tags: ['docker']
 
 variables:
-  LONG_LIVED_BRANCHES: /master|develop/ # only changes in long-lived will be versioned
-  PROP_FILE: ci-props.json  # where to extract project version and name
-#   DIST_DIR: target/lib # folder for build outputs, used for dependency-check
+  LONG_LIVED_BRANCHES: /master/ # only changes in long-lived will be versioned
+  THE_NAME: static-web  # used to name deploy package etc.
+  THE_VERSION: 1.0  # only major.minor part will be used for tagging
 
 sast: # Static Application Security Test (Whitebox)
   extends: .eis_sonar_scan 
   variables:
-    # BUILD_CMD: './mvnw' # For maven projects, use mvn wrapper - https://www.baeldung.com/maven-wrapper
-    # BUILD_OPTS: install dependency:copy-dependencies -DoutputDirectory=$DIST_DIR
-    SONAR_SRC: 'src'    # source folder to be scanned by sonarqube
-    # SONAR_BINARIES: "target/classes/main/java"  # compiled folder to be scanned by sonarqube
+    SONAR_SRC: '.'    # source folder to be scanned by sonarqube
 
 .dast: # Dynamic Application Security Test (Blackbox)
-  extends: 
-    - .eis_zap_scan
+  extends: .eis_zap_scan
   variables:
     ZAP_URL: https://portal.cc.toronto.ca
+      
       
