@@ -20,7 +20,7 @@ sast: # Static Application Security Test (Whitebox)
   variables:
     SONAR_SRC: '.'    # source folder to be scanned by sonarqube
 
-.dast: # Dynamic Application Security Test (Blackbox)
+.dast: # Dynamic Application Security Test (Blackbox) 123
   extends: .eis_zap_scan
   variables:
     ZAP_URL: https://portal.cc.toronto.ca
